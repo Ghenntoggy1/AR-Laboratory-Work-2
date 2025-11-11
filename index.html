@@ -57,7 +57,7 @@
     <a-asset-item id="merchant-model" src="/models/buyer_model/scene.gltf"></a-asset-item>
   </a-assets>
 
-  <a-entity light="type: point; intensity: 1; distance: 0; decay: 0"
+  <a-entity light="type: point; intensity: 10; distance: 0; decay: 0"
           position="30 0 -40"></a-entity>
 
   <!-- Data Chip marker -->
@@ -68,7 +68,7 @@
 
   <!-- Merchant marker -->
   <a-nft id="marker-merchant" type="nft" url="markers/buyer-descriptor-rs-marker">
-    <a-entity id="model-merchant" gltf-model="#merchant-model" scale="30 30 50" rotation="-90 0 0" position="30 0 -40" visible="false"></a-entity>
+    <a-entity id="model-merchant" gltf-model="#merchant-model" scale="30 30 30" rotation="-90 0 0" position="30 0 -40" visible="false"></a-entity>
   </a-nft>
 
   <!-- Johnny's Car marker -->
