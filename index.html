@@ -50,6 +50,9 @@
 
 <!-- A-Frame scene -->
 <a-scene
+  renderer="logarithmicDepthBuffer: true"
+  embedded
+  arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
 >
   <!-- -------- MARKERS (a-nft) --------
        Replace `url` attribute values with the base-name of your .fset/.iset/.fset3 descriptor path
@@ -57,7 +60,7 @@
   -->
 
   <!-- Data Chip marker -->
-  <a-nft id="marker-chip" type="nft" url="markers/chip-descriptor-rs-marker">
+  <a-nft id="marker-chip" type="nft" url="markers/chip-descriptor-2-rs-marker">
     <!-- chip model -->
     <a-entity id="model-chip" gltf-model="url(models/chip_model.glb)" scale="40 40 40" rotation="0 0 0" visible="false"></a-entity>
   </a-nft>
