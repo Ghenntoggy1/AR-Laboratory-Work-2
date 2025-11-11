@@ -1,0 +1,11 @@
+Model Information:
+* title:	Johny Silverhand guitar
+* source:	https://sketchfab.com/3d-models/johny-silverhand-guitar-9931a785b6b5403b9db4d58929f7698f
+* author:	Sh0ma (https://sketchfab.com/Sh0ma)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Johny Silverhand guitar" (https://sketchfab.com/3d-models/johny-silverhand-guitar-9931a785b6b5403b9db4d58929f7698f) by Sh0ma (https://sketchfab.com/Sh0ma) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
