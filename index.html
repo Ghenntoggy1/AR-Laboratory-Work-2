@@ -301,7 +301,30 @@ function handleMarkerScanned(markerId) {
     case 'marker-merchant':
       if ((state === 'chipFound' && chosenBranch === 'sell') || state === 'branch_sell_allowed') {
         setState('merchantTalk');
-        showMerchantUI();
+        clearControls();
+        setMessage("You meet the merchant... he's nervous.");
+
+        // Create a floating a-text near merchant
+        const merchantMarker = document.querySelector('#marker-merchant');
+        let speech = merchantMarker.querySelector('a-text');
+        if (!speech) {
+          speech = document.createElement('a-text');
+          speech.setAttribute('value', "Merchant: I can buy this... but someone's following us!");
+          speech.setAttribute('color', 'yellow');
+          speech.setAttribute('align', 'center');
+          speech.setAttribute('position', '0 120 0');
+          speech.setAttribute('width', '4');
+          merchantMarker.appendChild(speech);
+        } else {
+          speech.setAttribute('visible', 'true');
+        }
+
+        // Wait 4 seconds, then hide text and start the 15s hide timer
+        setTimeout(() => {
+          if (speech) speech.setAttribute('visible', 'false');
+          setMessage("Merchant: You have 15 seconds to hide! Scan Scooter or Escape Car markers.");
+          showMerchantUI(); // this starts the timer
+        }, 4000);
       }
       break;
 
@@ -522,19 +545,6 @@ markers.forEach(markerEl => {
 });
 
 /* ---------- utilities ---------- */
-
-// add button helper (used inside showChipUI)
-function addButton(text, cb, id) {
-  return window.addButton ? window.addButton(text, cb, id) : (() => {
-    const b = document.createElement('button');
-    b.className = 'btn';
-    if (id) b.id = id;
-    b.innerText = text;
-    b.onclick = cb;
-    UI.controls.appendChild(b);
-    return b;
-  })();
-}
 
 // Hook restart button
 UI.restartBtn.addEventListener('click', restartGame);
