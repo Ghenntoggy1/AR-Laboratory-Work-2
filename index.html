@@ -1,73 +1,550 @@
-<!-- import aframe and then ar.js with image tracking / location based features -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cyberpunk AR Minigame (A-Frame + AR.js NFT)</title>
+
+<!-- A-Frame + AR.js (NFT build) -->
 <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93967b5412487cd94b290b/dist/aframe-master.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
 
-<!-- style for the loader -->
 <style>
-  .arjs-loader {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  html,body { height:100%; margin:0; overflow:hidden; font-family: Inter, Arial, sans-serif; }
+  .arjs-loader { height:100%; width:100%; position: absolute; top:0; left:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; }
+  #ui {
+    position: absolute; left: 10px; bottom: 10px; z-index: 10000; color: #e6e6e6;
+    max-width: 420px; background: rgba(10,10,10,0.6); padding: 12px; border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
   }
-
-  .arjs-loader div {
-    text-align: center;
-    font-size: 1.25em;
-    color: white;
-  }
+  #message { margin-bottom: 8px; font-size: 0.95rem; }
+  .btn { background:#0f1724; border:1px solid #4b5563; color:#fff; padding:8px 10px; border-radius:6px; cursor:pointer; margin-right:6px; }
+  .btn:active { transform:translateY(1px); }
+  #timer { font-weight:700; }
+  .small { font-size:0.85rem; color:#cbd5e1; }
+  #debug { position:absolute; right:10px; top:10px; z-index:10001; color:#fff; font-size:0.85rem; background:rgba(0,0,0,0.5); padding:8px; border-radius:8px; }
 </style>
+</head>
+<body>
 
-<body style="margin : 0px; overflow: hidden;">
-  <!-- minimal loader shown until image descriptors are loaded. Loading may take a while according to the device computational power -->
-  <div class="arjs-loader">
-    <div>Loading, please wait...</div>
+<div class="arjs-loader" id="loader">Loading descriptors & models — please wait...</div>
+
+<!-- UI Overlay -->
+<div id="ui">
+  <div id="message">Approach the first marker (Data Chip) to begin.</div>
+  <div id="controls">
+    <!-- buttons shown/hidden by script -->
   </div>
+  <div class="small">State: <span id="stateLabel">idle</span> | Current Marker: <span id="currentMarker">none</span></div>
+  <div id="timerWrap" style="display:none; margin-top:6px;">
+    <div>Hide timer: <span id="timer">15</span>s</div>
+  </div>
+  <div style="margin-top:8px;">
+    <button class="btn" id="restartBtn">Restart Game</button>
+  </div>
+</div>
 
-  <!-- a-frame scene -->
-  <a-scene
-    vr-mode-ui="enabled: false;"
-    renderer="logarithmicDepthBuffer: true;"
-    embedded
-    arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"
-  >
-    <!-- a-nft is the anchor that defines an Image Tracking entity -->
-    <!-- on 'url' use the path to the Image Descriptors created before. -->
-    <!-- the path should end with the name without the extension e.g. if file is 'pinball.fset' the path should end with 'pinball' -->
-    <a-nft
-      type="nft"
-      url="trigger_image_1_cropped"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance=".01"
-      smoothThreshold="5"
-    >
-      <!-- as a child of the a-nft entity, you can define the content to show. here's a GLTF model entity -->
-      <a-entity
-        gltf-model="computer.glb"
-        scale="1 1 1"
-        position="50 150 0"
-      >
-      </a-entity>
-       
-    </a-nft> 
-    <a-entity position="1 0 0" scale="3 3 3" text="value: HELLO;color:yellow"></a-entity>
+<div id="debug" style="display:none;">
+  Debug: <span id="dbg">—</span>
+</div>
 
-   <!--  <a-text 
-    value="Hello, AR World!" 
-    color="yellow" 
-    width="4" 
-    position="50 150 0"
-    
-    
-  >-->
-    <!-- static camera that moves according to the device movemenents -->
-    <a-entity camera></a-entity>
-  </a-scene>
+<!-- A-Frame scene -->
+<a-scene
+  vr-mode-ui="enabled: false"
+  renderer="logarithmicDepthBuffer: true"
+  embedded
+  arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+>
+  <!-- -------- MARKERS (a-nft) --------
+       Replace `url` attribute values with the base-name of your .fset/.iset/.fset3 descriptor path
+       For example url="chip_descriptor" will load chip_descriptor.fset, .fset3, .iset etc depending on your files hosted.
+  -->
+
+  <!-- Data Chip marker -->
+  <a-nft id="marker-chip" type="nft" url="markers/chip-descriptor-rs-marker">
+    <!-- chip model -->
+    <a-entity id="model-chip" gltf-model="url(models/chip_model.glb)" scale="40 40 40" rotation="0 0 0" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Merchant marker -->
+  <a-nft id="marker-merchant" type="nft" url="markers/buyer-descriptor-rs-marker">
+    <a-entity id="model-merchant" gltf-model="url(models/buyer_model.glb)" scale="50 50 50" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Johnny's Car marker -->
+  <a-nft id="marker-car" type="nft" url="markers/car-descriptor-rs-marker">
+    <a-entity id="model-car" gltf-model="url(models/johnny_car_model.glb)" scale="50 50 50" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Johnny himself marker -->
+  <a-nft id="marker-johnny" type="nft" url="markers/johnny-descriptor-rs-marker">
+    <a-entity id="model-johnny" gltf-model="url(models/johnny_terminal_model.glb)" scale="60 60 60" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Scooter (hide option) -->
+  <a-nft id="marker-scooter" type="nft" url="markers/scooter-descriptor-rs-marker">
+    <a-entity id="model-scooter" gltf-model="url(models/scooter_model.glb)" scale="40 40 40" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Escape Car (good hide option) -->
+  <a-nft id="marker-escapeCar" type="nft" url="markers/hover-descriptor-rs-marker">
+    <a-entity id="model-escapeCar" gltf-model="url(models/hover_car_model.glb)" scale="40 40 40" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Guitar -->
+  <a-nft id="marker-guitar" type="nft" url="markers/guitar-descriptor-rs-marker">
+    <a-entity id="model-guitar" gltf-model="url(models/johnny_guitar_model.glb)" scale="10 10 10" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Guitar Case -->
+  <a-nft id="marker-gcase" type="nft" url="markers/case-descriptor-rs-marker">
+    <a-entity id="model-gcase" gltf-model="url(models/guitar_case_model.glb)" scale="12 12 12" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Johnny's Gun -->
+  <a-nft id="marker-gun" type="nft" url="markers/gun-descriptor-rs-marker">
+    <a-entity id="model-gun" gltf-model="url(models/johnny_gun_model.glb)" scale="8 8 8" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- Adam Smasher (game over) -->
+  <a-nft id="marker-adam" type="nft" url="markers/adam-descriptor-rs-marker">
+    <a-entity id="model-adam" gltf-model="url(models/adam_smasher_model.glb)" scale="70 70 70" visible="false"></a-entity>
+  </a-nft>
+
+  <!-- camera -->
+  <a-entity camera></a-entity>
+</a-scene>
+
+<script>
+/* -------------------------
+   Game state machine
+   -------------------------
+   States:
+     - idle
+     - chipFound (chip scanned)
+     - branch_sell_allowed (merchant path)
+     - branch_decipher_allowed (decipher path & car scan allowed)
+     - merchantTalk (merchant scanned -> start 15s hide timer)
+     - hideTimerActive
+     - carFound
+     - johnnyFound
+     - searchObjects (guitar/gcase/gun scan allowed)
+     - win
+     - gameOver
+*/
+const UI = {
+  message: document.getElementById('message'),
+  controls: document.getElementById('controls'),
+  stateLabel: document.getElementById('stateLabel'),
+  currentMarkerLabel: document.getElementById('currentMarker'),
+  loader: document.getElementById('loader'),
+  timerWrap: document.getElementById('timerWrap'),
+  timer: document.getElementById('timer'),
+  restartBtn: document.getElementById('restartBtn'),
+  dbg: document.getElementById('dbg'),
+};
+
+// Replace this with your encrypted message (we'll show Caesar cipher on the chip)
+const encryptedChipText = caesarEncrypt("Property of Johnny Silverhand. Find his car to retrieve the guitar.", 5);
+
+// Utility: Caesar cipher encode (for demo encrypted text)
+function caesarEncrypt(plain, shift) {
+  return plain.split('').map(ch => {
+    const c = ch.charCodeAt(0);
+    if (c >= 65 && c <= 90) return String.fromCharCode(((c - 65 + shift) % 26) + 65);
+    if (c >= 97 && c <= 122) return String.fromCharCode(((c - 97 + shift) % 26) + 97);
+    return ch;
+  }).join('');
+}
+function caesarDecrypt(cipher, shift) {
+  return caesarEncrypt(cipher, (26 - (shift%26))%26);
+}
+
+// game variables
+let state = "idle";
+let currentActiveMarker = null; // id of marker currently shown
+let markerQueue = []; // found marker events queue (first wins)
+let merchantTimer = null;
+let merchantSeconds = 15;
+let chosenBranch = null; // 'sell' or 'decipher'
+
+// mapping from marker element ids to friendly names
+const markerFriendly = {
+  'marker-chip': 'Data Chip',
+  'marker-merchant': 'Merchant',
+  'marker-car': "Johnny's Car",
+  'marker-johnny': "Johnny Silverhand",
+  'marker-scooter': 'Scooter (hide)',
+  'marker-escapeCar': 'Escape Car (hide)',
+  'marker-guitar': 'Guitar',
+  'marker-gcase': 'Guitar Case',
+  'marker-gun': "Johnny's Gun",
+  'marker-adam': 'Adam Smasher'
+};
+
+// list all marker elements
+const markers = Object.keys(markerFriendly).map(id => document.getElementById(id));
+
+// show loader for a bit then hide it (also model loading may take longer — keep loader until first marker appears)
+setTimeout(() => {
+  UI.loader.style.display = 'flex';
+}, 50);
+
+// helper to set message
+function setMessage(txt) { UI.message.innerHTML = txt; }
+function setState(s) { state = s; UI.stateLabel.innerText = s; }
+
+// show/hide control buttons
+function clearControls() { UI.controls.innerHTML = ''; }
+function addButton(text, onClick, id) {
+  const b = document.createElement('button');
+  b.className = 'btn';
+  if (id) b.id = id;
+  b.innerText = text;
+  b.onclick = onClick;
+  UI.controls.appendChild(b);
+  return b;
+}
+
+// allow marker model to be visible if allowed by current game state
+function isMarkerAllowed(markerId) {
+  // Always allow chip at start
+  if (state === 'idle' && markerId === 'marker-chip') return true;
+  if (state === 'chipFound') {
+    // after scanning chip, we present two choices to player; merchant or decryptation
+    // if the player chose branch already, require that marker
+    if (!chosenBranch) return (markerId === 'marker-merchant' || markerId === 'marker-chip'); // merchant allowed if decide to sell, still allow chip to re-scan
+    if (chosenBranch === 'sell') return (markerId === 'marker-merchant' || markerId === 'marker-chip');
+    if (chosenBranch === 'decipher') return (markerId === 'marker-car' || markerId === 'marker-chip');
+  }
+  if (state === 'branch_sell_allowed' || state === 'merchantTalk') {
+    // merchant path only
+    return (markerId === 'marker-merchant' || markerId === 'marker-scooter' || markerId === 'marker-escapeCar' || markerId === 'marker-chip');
+  }
+  if (state === 'branch_decipher_allowed' || state === 'carFound') {
+    return (markerId === 'marker-car' || markerId === 'marker-johnny' || markerId === 'marker-chip' );
+  }
+  if (state === 'johnnyFound' || state === 'searchObjects') {
+    // objects scanning after Johnny
+    return (markerId === 'marker-guitar' || markerId === 'marker-gcase' || markerId === 'marker-gun' || markerId === 'marker-chip');
+  }
+  if (state === 'gameOver' || state === 'win') {
+    // allow restart marker(s) (e.g. Adam) if you want, but mainly no progression
+    return (markerId === 'marker-adam' || markerId === 'marker-chip');
+  }
+  return false;
+}
+
+// ensures only the allowed marker's model is visible and hides others
+function showMarkerModel(markerId) {
+  // If there's already an active marker and it's not the same, ignore unless the active marker was lost
+  if (currentActiveMarker && currentActiveMarker !== markerId) {
+    // do not switch to the new marker if an allowed marker is already active
+    console.log('Marker found but another is active:', markerId, 'active:', currentActiveMarker);
+    return;
+  }
+
+  // show the model entity under that marker (first child a-entity)
+  if (!isMarkerAllowed(markerId)) {
+    console.log('Marker not allowed at this state:', markerId, state);
+    return;
+  }
+
+  currentActiveMarker = markerId;
+  UI.currentMarkerLabel.innerText = markerFriendly[markerId] || markerId;
+
+  // hide all models first
+  document.querySelectorAll('a-entity[gltf-model]').forEach(e => e.setAttribute('visible', 'false'));
+
+  // show the model for the found marker
+  const markerEl = document.getElementById(markerId);
+  const model = markerEl.querySelector('a-entity[gltf-model]');
+  if (model) model.setAttribute('visible', 'true');
+
+  // hide the loader once a real model is shown
+  UI.loader.style.display = 'none';
+
+  // handle game events when a marker is actively scanned
+  handleMarkerScanned(markerId);
+}
+
+// clears active marker (on markerLost)
+function clearActiveMarker(markerId) {
+  if (currentActiveMarker === markerId) {
+    // hide model
+    const markerEl = document.getElementById(markerId);
+    const model = markerEl.querySelector('a-entity[gltf-model]');
+    if (model) model.setAttribute('visible', 'false');
+    currentActiveMarker = null;
+    UI.currentMarkerLabel.innerText = 'none';
+  }
+}
+
+// main logic when a marker successfully scanned & shown
+function handleMarkerScanned(markerId) {
+  switch (markerId) {
+    case 'marker-chip':
+      if (state === 'idle' || state === 'chipFound') {
+        setState('chipFound');
+        showChipUI();
+      }
+      break;
+
+    case 'marker-merchant':
+      if ((state === 'chipFound' && chosenBranch === 'sell') || state === 'branch_sell_allowed') {
+        setState('merchantTalk');
+        showMerchantUI();
+      }
+      break;
+
+    case 'marker-car':
+      if ((state === 'chipFound' && chosenBranch === 'decipher') || state === 'branch_decipher_allowed') {
+        setState('carFound');
+        setMessage("Johnny's Car found. Try scanning Johnny's portrait to find more clues.");
+        clearControls();
+      }
+      break;
+
+    case 'marker-johnny':
+      if (state === 'carFound' || state === 'branch_decipher_allowed') {
+        setState('johnnyFound');
+        showJohnnyUI();
+      }
+      break;
+
+    case 'marker-scooter':
+      if (state === 'merchantTalk' || state === 'hideTimerActive') {
+        // scooter chosen -> fail
+        cancelMerchantTimer();
+        gameOver("The scooter was traced — a hit squad finds you. Game over.");
+      }
+      break;
+
+    case 'marker-escapeCar':
+      if (state === 'merchantTalk' || state === 'hideTimerActive') {
+        cancelMerchantTimer();
+        win("You escaped in a fast car — Merchant path success!");
+      }
+      break;
+
+    case 'marker-guitar':
+      if (state === 'johnnyFound' || state === 'searchObjects') {
+        win("You found Johnny's guitar — the guitar is recovered. You win!");
+      }
+      break;
+
+    case 'marker-gcase':
+    case 'marker-gun':
+      if (state === 'johnnyFound' || state === 'searchObjects') {
+        setState('searchObjects');
+        setMessage("This isn't the guitar. Keep searching (scan other nearby objects).");
+        // allow scanning to continue - keep currentActiveMarker cleared so user can scan other objects
+        // but only after a short pause to avoid stuck showing same model
+        setTimeout(() => {
+          clearActiveMarker(markerId);
+        }, 900);
+      }
+      break;
+
+    case 'marker-adam':
+      // show Adam (game over)
+      gameOver("Adam Smasher appeared... it's over. Restart to try again.");
+      break;
+
+    default:
+      console.log("Unhandled marker:", markerId);
+  }
+}
+
+/* -------- UI flows for chip, merchant, Johnny -------- */
+
+function showChipUI() {
+  clearControls();
+  setMessage("You scanned the Data Chip. It's encrypted.");
+  // Show the encrypted text and options: Decipher or Sell
+  const txt = document.createElement('div');
+  txt.className = 'small';
+  txt.innerHTML = `<strong>Encrypted:</strong> ${encryptedChipText}<br/>`;
+  UI.controls.appendChild(txt);
+
+  // Decipher button (auto-decode with known shift for demo)
+  addButton('Decipher (auto)', () => {
+    chosenBranch = 'decipher';
+    setMessage("You deciphered the chip message:");
+    const decoded = caesarDecrypt(encryptedChipText, 5);
+    UI.controls.innerHTML = `<div class="small"><strong>Decrypted:</strong> ${decoded}</div>`;
+    addButton('Proceed to Johnny\'s Car (Scan Car marker)', () => {
+      setState('branch_decipher_allowed');
+      setMessage("Now scan Johnny's Car marker to continue.");
+      UI.controls.innerHTML = '';
+    });
+  }, 'decipherBtn');
+
+  // Sell option
+  addButton('Sell to Merchant', () => {
+    chosenBranch = 'sell';
+    setState('branch_sell_allowed');
+    setMessage("You decided to sell the chip. Scan the Merchant marker to meet them.");
+    clearControls();
+  }, 'sellBtn');
+}
+
+function showMerchantUI() {
+  clearControls();
+  setMessage("Merchant: 'I can buy this... but I've been followed. You have 15s to choose a hideout!'");
+
+  // show hide choices instructions
+  const info = document.createElement('div');
+  info.className = 'small';
+  info.innerText = "Scan either the Scooter or the Escape Car markers near you. Scooter = bad, Car = good.";
+  UI.controls.appendChild(info);
+
+  // start 15s timer allowing scooter/escapeCar to be scanned
+  startMerchantTimer();
+}
+
+function showJohnnyUI() {
+  clearControls();
+  setMessage("You scanned Johnny. He says: 'Find my car, retrieve the guitar.' Now search nearby objects (guitar, case, gun).");
+  setState('searchObjects');
+  // allow scanning of objects - UI can show hint
+  addButton('Hint: scan guitar case, gun, guitar', () => {
+    setMessage("Hint shown: scan guitar / case / gun markers.");
+  });
+}
+
+/* -------- timer logic for merchant path -------- */
+
+function startMerchantTimer() {
+  merchantSeconds = 15;
+  UI.timerWrap.style.display = 'block';
+  UI.timer.innerText = merchantSeconds;
+  setState('hideTimerActive');
+  UI.controls.querySelectorAll('.btn').forEach(b => b.disabled = true);
+  // we don't disable scanning; player must scan scooter or escapeCar marker
+  merchantTimer = setInterval(() => {
+    merchantSeconds -= 1;
+    UI.timer.innerText = merchantSeconds;
+    if (merchantSeconds <= 0) {
+      cancelMerchantTimer();
+      // Adam appears — game over
+      showAdam();
+      gameOver("Time ran out. Adam Smasher shows up and takes you out.");
+    }
+  }, 1000);
+}
+function cancelMerchantTimer() {
+  UI.timerWrap.style.display = 'none';
+  if (merchantTimer) { clearInterval(merchantTimer); merchantTimer = null; }
+  UI.controls.querySelectorAll('.btn').forEach(b => b.disabled = false);
+}
+
+function showAdam() {
+  // make Adam model visible (we expect its marker to be in some place — but we'll also force show if you want)
+  const adamModel = document.querySelector('#model-adam');
+  if (adamModel) adamModel.setAttribute('visible', 'true');
+  // set currentActiveMarker so other markers won't appear
+  currentActiveMarker = 'marker-adam';
+  UI.currentMarkerLabel.innerText = 'Adam Smasher';
+}
+
+/* -------- win / gameOver / restart -------- */
+
+function win(msg) {
+  cancelMerchantTimer();
+  setState('win');
+  setMessage(msg + " 🎉");
+  clearControls();
+  // stop showing other models
+  document.querySelectorAll('a-entity[gltf-model]').forEach(e => e.setAttribute('visible', 'false'));
+  currentActiveMarker = null;
+}
+
+function gameOver(msg) {
+  cancelMerchantTimer();
+  setState('gameOver');
+  setMessage(msg);
+  clearControls();
+  addButton('Restart', () => restartGame());
+}
+
+function restartGame() {
+  cancelMerchantTimer();
+  chosenBranch = null;
+  clearControls();
+  // hide all models
+  document.querySelectorAll('a-entity[gltf-model]').forEach(e => e.setAttribute('visible', 'false'));
+  currentActiveMarker = null;
+  setState('idle');
+  setMessage("Game restarted. Scan the Data Chip marker to begin.");
+  UI.timerWrap.style.display = 'none';
+}
+
+/* ---------- marker found / lost listeners ---------- */
+
+// Helper to attach listeners to marker elements
+markers.forEach(markerEl => {
+  if (!markerEl) return;
+  // 'markerFound' and 'markerLost' events are emitted by AR.js markers
+  markerEl.addEventListener('markerFound', () => {
+    const id = markerEl.id;
+    console.log('Found marker:', id);
+    UI.dbg.innerText = `found ${id}`;
+    UI.debug && (UI.debug.style.display = 'block');
+
+    // attempt to show; but only if allowed by game state
+    if (isMarkerAllowed(id)) {
+      showMarkerModel(id);
+    } else {
+      // not allowed — briefly flash a message
+      setMessage(`You found ${markerFriendly[id]}. But it's not relevant yet.`);
+      // optionally hide after a short interval
+      setTimeout(() => {
+        if (state === 'idle') setMessage("Approach the Data Chip marker to begin.");
+      }, 1700);
+    }
+  });
+
+  markerEl.addEventListener('markerLost', () => {
+    const id = markerEl.id;
+    console.log('Lost marker:', id);
+    UI.dbg.innerText = `lost ${id}`;
+    clearActiveMarker(id);
+  });
+});
+
+/* ---------- utilities ---------- */
+
+// add button helper (used inside showChipUI)
+function addButton(text, cb, id) {
+  return window.addButton ? window.addButton(text, cb, id) : (() => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    if (id) b.id = id;
+    b.innerText = text;
+    b.onclick = cb;
+    UI.controls.appendChild(b);
+    return b;
+  })();
+}
+
+// Hook restart button
+UI.restartBtn.addEventListener('click', restartGame);
+
+// Hide loader once the AR scene is initialized (rough heuristic)
+window.addEventListener('arjs-video-loaded', () => {
+  UI.loader.style.display = 'none';
+  setMessage("Ready. Scan the Data Chip marker to start the story.");
+});
+
+// In case arjs-video-loaded isn't fired in some builds, remove loader after 10s
+setTimeout(() => {
+  if (UI.loader.style.display !== 'none') {
+    UI.loader.style.display = 'none';
+    setMessage("Ready. Scan the Data Chip marker to start the story.");
+  }
+}, 10000);
+
+</script>
 </body>
+</html>
