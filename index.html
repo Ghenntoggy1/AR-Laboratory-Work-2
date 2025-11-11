@@ -52,6 +52,8 @@
 <a-scene
   arjs="trackingMethod: best; debugUIEnabled: false;"
 >
+  <a-entity light="type: ambient; intensity: 1"></a-entity>
+  <a-entity light="type: directional; intensity: 0.6" position="0 1 1"></a-entity>
   <!-- -------- MARKERS (a-nft) --------
        Replace `url` attribute values with the base-name of your .fset/.iset/.fset3 descriptor path
        For example url="chip_descriptor" will load chip_descriptor.fset, .fset3, .iset etc depending on your files hosted.
@@ -65,7 +67,7 @@
 
   <!-- Merchant marker -->
   <a-nft id="marker-merchant" type="nft" url="markers/buyer-descriptor-rs-marker">
-    <a-entity id="model-merchant" gltf-model="url(models/buyer_model.glb)" scale="50 50 50" visible="false"></a-entity>
+    <a-entity id="model-merchant" gltf-model="url(models/buyer_model.glb)" scale="50 50 50" rotation="-90 0 0" visible="false"></a-entity>
   </a-nft>
 
   <!-- Johnny's Car marker -->
