@@ -52,17 +52,9 @@
 <a-scene
   arjs="trackingMethod: best; debugUIEnabled: false;"
 >
-  <a-assets timeout="10000">
+  <a-assets>
     <a-asset-item id="chip-model" src="/models/chip_model/scene.gltf"></a-asset-item>
     <a-asset-item id="merchant-model" src="/models/buyer_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="johnny-car-model" src="/models/johnny_car_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="johnny-gun-model" src="/models/johnny_gun_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="johnny-guitar-model" src="/models/johnny_guitar_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="johnny-terminal-model" src="/models/johnny_terminal_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="guitar-case-model" src="/models/guitar_case_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="adam-smasher-model" src="/models/adam_smasher_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="scooter-model" src="/models/scooter_model_model/scene.gltf"></a-asset-item>
-    <a-asset-item id="hover-car-model" src="/models/hover_car_model/scene.gltf"></a-asset-item>
   </a-assets>
 
   <a-entity light="type: point; intensity: 3; distance: 0; decay: 0"
@@ -81,42 +73,42 @@
 
   <!-- Johnny's Car marker -->
   <a-nft id="marker-car" type="nft" url="markers/car-descriptor-rs-marker">
-    <a-entity id="model-car" gltf-model="#johnny-car-model" scale="50 50 50" visible="false"></a-entity>
+    <a-entity id="model-car" gltf-model="url(models/johnny_car_model.glb)" scale="50 50 50" visible="false"></a-entity>
   </a-nft>
 
   <!-- Johnny himself marker -->
   <a-nft id="marker-johnny" type="nft" url="markers/johnny-descriptor-rs-marker">
-    <a-entity id="model-johnny" gltf-model="#johnny-terminal-model" scale="60 60 60" visible="false"></a-entity>
+    <a-entity id="model-johnny" gltf-model="url(models/johnny_terminal_model.glb)" scale="60 60 60" visible="false"></a-entity>
   </a-nft>
 
   <!-- Scooter (hide option) -->
   <a-nft id="marker-scooter" type="nft" url="markers/scooter-descriptor-rs-marker">
-    <a-entity id="model-scooter" gltf-model="#scooter-model" scale="40 40 40" visible="false"></a-entity>
+    <a-entity id="model-scooter" gltf-model="url(models/scooter_model.glb)" scale="40 40 40" visible="false"></a-entity>
   </a-nft>
 
   <!-- Escape Car (good hide option) -->
   <a-nft id="marker-escapeCar" type="nft" url="markers/hover-descriptor-rs-marker">
-    <a-entity id="model-escapeCar" gltf-model="#hover-car-model" scale="40 40 40" visible="false"></a-entity>
+    <a-entity id="model-escapeCar" gltf-model="url(models/hover_car_model.glb)" scale="40 40 40" visible="false"></a-entity>
   </a-nft>
 
   <!-- Guitar -->
   <a-nft id="marker-guitar" type="nft" url="markers/guitar-descriptor-rs-marker">
-    <a-entity id="model-guitar" gltf-model="#johnny-guitar-model" scale="10 10 10" visible="false"></a-entity>
+    <a-entity id="model-guitar" gltf-model="url(models/johnny_guitar_model.glb)" scale="10 10 10" visible="false"></a-entity>
   </a-nft>
 
   <!-- Guitar Case -->
   <a-nft id="marker-gcase" type="nft" url="markers/case-descriptor-rs-marker">
-    <a-entity id="model-gcase" gltf-model="#guitar-case-model" scale="12 12 12" visible="false"></a-entity>
+    <a-entity id="model-gcase" gltf-model="url(models/guitar_case_model.glb)" scale="12 12 12" visible="false"></a-entity>
   </a-nft>
 
   <!-- Johnny's Gun -->
   <a-nft id="marker-gun" type="nft" url="markers/gun-descriptor-rs-marker">
-    <a-entity id="model-gun" gltf-model="#johnny-gun-model" scale="8 8 8" visible="false"></a-entity>
+    <a-entity id="model-gun" gltf-model="url(models/johnny_gun_model.glb)" scale="8 8 8" visible="false"></a-entity>
   </a-nft>
 
   <!-- Adam Smasher (game over) -->
   <a-nft id="marker-adam" type="nft" url="markers/adam-descriptor-rs-marker">
-    <a-entity id="model-adam" gltf-model="#adam-smasher-model" scale="70 70 70" visible="false"></a-entity>
+    <a-entity id="model-adam" gltf-model="url(models/adam_smasher_model.glb)" scale="70 70 70" visible="false"></a-entity>
   </a-nft>
 
   <!-- camera -->
